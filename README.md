@@ -1,6 +1,6 @@
 # Sql Server DML Filestream
 
-## Objectives
+## Scope
 
 * Sql Server 2019 running on windows server 2019 data center edition VM on Azure
 * DDL for the table:
@@ -90,3 +90,4 @@ GO
 }
 ```
 * Create a stress test using JMeter to test performance with 1, 10, 25, 50 thread users
+* Markdown documentation for instructions
