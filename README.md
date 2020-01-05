@@ -68,6 +68,7 @@ GO
 {
   "table": "FareTypes",
   "action": "insert|update|delete",
+  "timestamp": "2002-10-02T15:00:00.05Z",
   "id": "single field pk field value",
   "data": {
 	  "FareTypeId": 1,
@@ -85,7 +86,7 @@ GO
 	  "NumCode": 1,
 	  "FareMode": 0,
 	  "FareCalcType": 0,
-	  "SourceTimestamp": "2002-10-02T15:00:00.05Z",
+	  "SourceTimestamp": "2002-10-02T15:00:00.05Z"
   }
 }
 ```
