@@ -1,4 +1,4 @@
-# Sql Server T-Sql 
+# Sql Server T-Sql Trigger Write File
 
 ## Objectives
 
@@ -88,3 +88,8 @@ select * from dbo.CqrsErrors order by Timestamp
 * Create folder `D:\Temp\FareTypes`
 * Re-execute the sql statements above
 * Check the folder to see few files created with json content
+
+## The fine print
+
+* For performance reasons the output folder needs to be on a separate disk from the rest of the System
+* The approach has been tested for a single table replication
