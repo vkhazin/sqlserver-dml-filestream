@@ -1,65 +1,38 @@
-# Sql Server DML [Filestream](https://docs.microsoft.com/en-us/sql/relational-databases/blob/filestream-sql-server?view=sql-server-ver15)
+# Sql Server T-Sql 
+
+## Sql Server Configuration
+
+* One-time setup using powershell execute:
+```
+$dbname="Trapeze6_Generic"
+sqlcmd -d $dbname -i ./common/sqlserver-config.sql
+sqlcmd -d $dbname -i ./common/fn-file-name.sql
+sqlcmd -d $dbname -i ./common/fn-write-file.sql
+sqlcmd -d $dbname -i ./common/cqrs-errors-ddl.sql
+sqlcmd -d $dbname -i ./common/sp-log-cqrs-error.sql
+
+
+sqlcmd -d $dbname -i ./fare-types/tr-fare-types-insert.sql
+sqlcmd -d $dbname -i ./fare-types/tr-fare-types-update.sql
+sqlcmd -d $dbname -i ./fare-types/tr-fare-types-delete.sql
+```
+
+* In the case of empty table, insert some data:
+```
+$dbname="Trapeze6_Generic"
+sqlcmd -d $dbname -i ./fare-types/fare-types-dml.sql
+```
 
 ## Scope
 
 * Sql Server 2019 running on windows server 2019 data center edition VM on Azure
 * DDL for the table:
 ```
-SET ANSI_NULLS ON
-GO
 
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE TABLE [dbo].[FareTypes](
-	[FareTypeId] [int] NOT NULL,
-	[FareTypeAbbr] [varchar](10) NULL,
-	[Description] [varchar](30) NULL,
-	[FlatFareAmt] [real] NULL,
-	[FlatRate] [real] NULL,
-	[DistanceRate] [real] NULL,
-	[PolygonRate] [real] NULL,
-	[TimeRate] [real] NULL,
-	[PolyTypeId] [int] NULL,
-	[PrepaidReq] [char](2) NULL,
-	[FareAdjustDiffZon] [float] NULL,
-	[FareAdjustSameZon] [float] NULL,
-	[DistanceLimitSameZon] [float] NULL,
-	[DistanceLimitDiffZon] [float] NULL,
-	[NumCode] [smallint] NULL,
-	[FareMode] [smallint] NULL,
-	[FareCalcType] [smallint] NULL,
-	[VariationOf] [int] NULL,
-	[MinFare] [real] NULL,
-	[MaxFare] [real] NULL,
-	[RoundFare] [tinyint] NULL,
-	[DistanceLimit] [int] NULL,
-	[RoundDirection] [smallint] NULL,
-	[Accuracy] [real] NULL,
-	[InActive] [smallint] NULL,
-	[Timestamp] [datetime2] DEFAULT SYSUTCDATETIME ( )
- CONSTRAINT [pkFareTypes] PRIMARY KEY CLUSTERED 
-(
-	[FareTypeId] ASC
-) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
 ```
 * Sample data for the table:
 ```
-GO
-INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive]) VALUES (1, N'STA', N'Standard Fare', NULL, 2, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 1, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-GO
-INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive]) VALUES (2, N'CON', N'Concessionary Fare', NULL, 1, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 2, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-GO
-INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive]) VALUES (3, N'CSF', N'Child Standard Fare', NULL, 1, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 3, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-GO
-INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive]) VALUES (4, N'CCF', N'Child Concessionary Fare', NULL, 0.5, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 4, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-GO
-INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive]) VALUES (5, N'ESC', N'Escort Fare', NULL, 0.75, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 5, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-GO
-INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive]) VALUES (6, N'FOC', N'Free Of Charge', NULL, 0, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 6, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-GO
+
 ```
 * Implement t-sql trigger on insert, update, and delete to write a file on the disk
 * File name: path as a constant inside t-sql code, slash, PK int value, dash, YYYY-MM-DDTHH-MM-SS-MS, dot, json
