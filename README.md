@@ -81,7 +81,7 @@ delete from dbo.FareTypes where FareTypeId=100
 select * from dbo.CqrsErrors order by Timestamp
 
 ```
-* Few ecords should appear in the table stating the folder was not found
+* Few records with error should appear in the table stating the folder was not found
 
 ### Success Test
 
