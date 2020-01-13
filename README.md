@@ -69,7 +69,7 @@ Start-Process -FilePath PowerShell_ISE.exe -Credential $credential -LoadUserProf
 ```
 * Inside the new PowerShell ISE, create credentias to zure Storage Account by executing portion of the script copied from Azure File Share:
 ```
-cmd.exe /C "cmdkey /add:`"stlegacydata.file.core.windows.net`" /user:`"Azure\stlegacydata`" /pass:`"BRdqBVYqNntplnr2qvupQalfd/GYKaZc93jELe29lMgF5Q7YR7gJV4rDmFc/lpkthmza52qFAq7GdscoFrh/tQ==`""
+cmd.exe /C "cmdkey /add:`"stlegacydata.file.core.windows.net`" /user:`"Azure\stlegacydata`" /pass:`"<storage-password>`""
 ```
 * Verify code inside Sql Server Function `CqrsGenerateFileName` points to the Azure Storage:
 ```
@@ -138,3 +138,10 @@ where FareTypeId = 100
 select * from CqrsErrors
 ```
 * Open Azure File Share to see new file posted
+* When creating an applicaiton user, the user must by granted following permissions in Sql Server:
+```
+use master
+grant exec on sp_OACreate to <sqlUser>
+grant exec on sp_OAMethod to <sqlUser>
+grant exec on sp_OADestroy to s<sqlUser>lUser
+```
