@@ -47,35 +47,14 @@ sqlcmd -d $dbname -i ./common/fn-write-file.sql
 sqlcmd -d $dbname -i ./common/cqrs-errors-ddl.sql
 sqlcmd -d $dbname -i ./common/sp-log-cqrs-error.sql
 
-# Once per table to cqrs
-sqlcmd -d $dbname -i ./fare-types/tr-fare-types-cqrs.sql
-```
+# Once per table to cqrs: 
 
-* Login to Windows VM and create new user e.g. `sqlservice`
-* Unselect: `User must change password at next login`
-* Select: `Password never expires`
-* Add the newly created user to `Administrators` group
-* Open `Local Security Policies` -> `Local Policies` -> `User Rights Assignment` -> `Log on as a service`
-* Add the newly created user to the `Log on as a service` right
-* Open `Sql Server Configuration Manager` and change Sql Server service to use the newly created user
-* Verify Sql Server is running after the service account change
-* `Azure Portal` -> Create new Azure Storage Account with a File Share
-* Copy the powershell script to connect to the account from Windows Server
-* `Sql Server VM` using the PowerShell ISE open another instance of PowerShell ISE as the service account:
-```
-$password = ConvertTo-SecureString -String "<service-account-password>" -AsPlainText -Force
-$credential = New-Object System.Management.Automation.PSCredential -ArgumentList "sqlservice", $password
-Start-Process -FilePath PowerShell_ISE.exe -Credential $credential -LoadUserProfile 
-```
-* Inside the new PowerShell ISE, create credentias to zure Storage Account by executing portion of the script copied from Azure File Share:
-```
-cmd.exe /C "cmdkey /add:`"stlegacydata.file.core.windows.net`" /user:`"Azure\stlegacydata`" /pass:`"<storage-password>`""
-```
+* `sqlcmd -d $dbname -i ./fare-types/tr-fare-types-cqrs.sql`
 * Verify code inside Sql Server Function `CqrsGenerateFileName` points to the Azure Storage:
 ```
 ...
 Set @result = (
-		'\\stlegacydata.file.core.windows.net\passcqrs\' + 
+		'C:\SqlServerData\Cqrs\' + 
     @tableName + '\' +
 		@event + '_' + 
 		Replace(
@@ -99,7 +78,7 @@ sqlcmd -d $dbname -i ./fare-types/fare-types-dml.sql
 
 ### Failure Test
 
-* Double check there is no folder in the Azure File Share `FareTypes`
+* Double check there is no folder `C:\SqlServerData\Cqrs\FareTypes`
 * Execute following statement in Sql Server Management Studio:
 ```
 delete from dbo.CqrsErrors
@@ -120,7 +99,7 @@ select * from CqrsErrors
 
 ### Success Test
 
-* Create folder under Azure File Share `FareTypes`
+* Create folder `C:\SqlServerData\Cqrs\FareTypes`
 * Execute the following statement in Sql Server Management Studio:
 ```
 delete from dbo.CqrsErrors
@@ -137,8 +116,8 @@ where FareTypeId = 100
 
 select * from CqrsErrors
 ```
-* Open Azure File Share to see new file posted
-* When creating an applicaiton user, the user must by granted following permissions in Sql Server:
+* Confirm files appear under the folder
+* When creating an application user for sql server, the user must by granted following permissions in Sql Server:
 ```
 use master
 grant exec on sp_OACreate to <sqlUser>
