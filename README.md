@@ -59,7 +59,12 @@ sqlcmd -d $dbname -i ./fare-types/tr-fare-types-cqrs.sql
 * Add the newly created user to the `Log on as a service` right
 * Open `Sql Server Configuration Manager` and change Sql Server service to use the newly created user
 * Verify Sql Server is running after the service account change
-* `Azure Portal` -> Create new Azure Storage Account with a File Share
+* `Azure Portal` -> Create new Azure Storage Account:
+```
+Performance: Premium
+Account Type: File Storage
+Replication: LRS 
+```
 * Copy the powershell script to connect to the account from Windows Server
 * `Sql Server VM` using the PowerShell ISE open another instance of PowerShell ISE as the service account:
 ```
