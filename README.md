@@ -1,4 +1,4 @@
-# Sql Server T-Sql 
+# Sql Server T-Sql Trigger Write File
 
 ## Objectives
 
@@ -9,24 +9,26 @@
 * File name: path with table name, action taken, dash, YYYY-MM-DDTHH-MM-SS-MS, dot, json
 * File content:
 ```
-{
-	"FareTypeId": 1,
-	"FareTypeAbbr": "STA",
-	"Description": "Standard Fare",
-	"FlatRate": 2.0,
-	"DistanceRate": 0.0,
-	"PolygonRate": 0.0,
-	"TimeRate": 0.0,
-	"PolyTypeId": 0,
-	"FareAdjustDiffZon": 0.0,
-	"FareAdjustSameZon": 0.0,
-	"DistanceLimitSameZon": 0.0,
-	"DistanceLimitDiffZon": 0.0,
-	"NumCode": 1,
-	"FareMode": 0,
-	"FareCalcType": 0,
-	"SourceTimestamp": "2002-10-02T15:00:00.05Z"
-}
+[
+	{
+		"FareTypeId": 1,
+		"FareTypeAbbr": "STA",
+		"Description": "Standard Fare",
+		"FlatRate": 2.0,
+		"DistanceRate": 0.0,
+		"PolygonRate": 0.0,
+		"TimeRate": 0.0,
+		"PolyTypeId": 0,
+		"FareAdjustDiffZon": 0.0,
+		"FareAdjustSameZon": 0.0,
+		"DistanceLimitSameZon": 0.0,
+		"DistanceLimitDiffZon": 0.0,
+		"NumCode": 1,
+		"FareMode": 0,
+		"FareCalcType": 0,
+		"Timestamp": "2002-10-02T15:00:00.05Z"
+	}
+]
 ```
 * In case of error generating file, write record to sql server table: CqrsErrors
 * A separate deliverable to send the files to Azure Event Hub
@@ -46,9 +48,7 @@ sqlcmd -d $dbname -i ./common/cqrs-errors-ddl.sql
 sqlcmd -d $dbname -i ./common/sp-log-cqrs-error.sql
 
 # Once per table to cqrs
-sqlcmd -d $dbname -i ./fare-types/tr-fare-types-insert.sql
-sqlcmd -d $dbname -i ./fare-types/tr-fare-types-update.sql
-sqlcmd -d $dbname -i ./fare-types/tr-fare-types-delete.sql
+sqlcmd -d $dbname -i ./fare-types/tr-fare-types-cqrs.sql
 ```
 
 * Login to Windows VM and create new user e.g. `sqlservice`
@@ -102,21 +102,39 @@ sqlcmd -d $dbname -i ./fare-types/fare-types-dml.sql
 * Double check there is no folder in the Azure File Share `FareTypes`
 * Execute following statement in Sql Server Management Studio:
 ```
+delete from dbo.CqrsErrors
+
+INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive], [Timestamp])
+VALUES (100, N'STA', N'Standard Fare', NULL, 2, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 1, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+
 update dbo.FareTypes
 set FareTypeId = FareTypeId
-where FareTypeId = (select top 1 FareTypeId from dbo.FareTypes)
+where FareTypeId = 100
+
+delete from dbo.FareTypes
+where FareTypeId = 100
 
 select * from CqrsErrors
 ```
-* One record should appear in the table stating error writing file
+* Records should appear in the table stating error writing file
 
 ### Success Test
 
 * Create folder under Azure File Share `FareTypes`
 * Execute the following statement in Sql Server Management Studio:
 ```
+delete from dbo.CqrsErrors
+
+INSERT [dbo].[FareTypes] ([FareTypeId], [FareTypeAbbr], [Description], [FlatFareAmt], [FlatRate], [DistanceRate], [PolygonRate], [TimeRate], [PolyTypeId], [PrepaidReq], [FareAdjustDiffZon], [FareAdjustSameZon], [DistanceLimitSameZon], [DistanceLimitDiffZon], [NumCode], [FareMode], [FareCalcType], [VariationOf], [MinFare], [MaxFare], [RoundFare], [DistanceLimit], [RoundDirection], [Accuracy], [InActive], [Timestamp])
+VALUES (100, N'STA', N'Standard Fare', NULL, 2, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 1, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+
 update dbo.FareTypes
 set FareTypeId = FareTypeId
-where FareTypeId = (select top 1 FareTypeId from dbo.FareTypes)
+where FareTypeId = 100
+
+delete from dbo.FareTypes
+where FareTypeId = 100
+
+select * from CqrsErrors
 ```
-* Open Azure File Share to see a new file posted
+* Open Azure File Share to see new file posted
