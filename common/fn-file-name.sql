@@ -7,22 +7,21 @@ GO
 CREATE FUNCTION [dbo].[CqrsGenerateFileName]
 (
   @tableName      varchar(100),
-	@operationType  varchar(100)
+	@event  varchar(100)
 )
-RETURNS varchar(255)
-AS
-BEGIN
+	RETURNS varchar(255)
+AS BEGIN
 	-- Declare the return variable here
 	declare @result varchar(255)
 
 	Set @result = (
-		'D:\Temp\' + 
+		'\\stlegacydata.file.core.windows.net\passcqrs\' + 
     @tableName + '\' +
-		@operationType + '_' + 
+		@event + '_' + 
 		Replace(
 			Replace(
 				Replace(
-					convert(varchar, getdate(), 21),' ','T'
+					convert(varchar, SYSUTCDATETIME (), 21),' ','T'
 				),'.','-'
 			),':','-'
 		) + '.json'

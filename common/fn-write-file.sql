@@ -10,86 +10,68 @@ CREATE FUNCTION [dbo].[CqrsWriteFile]
 		@data nvarchar(max)
   )
 	RETURNS varchar(max)
-AS 
+AS BEGIN
+  DECLARE 
+    @fileSystemToken INT,
+    @textStreamToken INT,
+    @strErrorMessage nvarchar(max),
+    @command nvarchar(max),
+    @result INT,
+    @Source nvarchar(max),
+		@MsgDescription nvarchar(max)
+
+  set @strErrorMessage = 'Creating FileSystemObject'
+  EXECUTE @result = sp_OACreate 
+    'Scripting.FileSystemObject',
+    @fileSystemToken OUT
+
+  IF @result = 0
+  begin
+    set @strErrorMessage = 'CreateTextFile: "' + @fullFilePath + '"'
+    EXECUTE @result = sp_OAMethod 
+      @fileSystemToken,
+      'CreateTextFile',
+      @textStreamToken OUT,
+      @fullFilePath,
+      2,
+      True
+  end
+
+  IF @result = 0 
+  begin
+    set @strErrorMessage = 'writing file: "' + @fullFilePath + '"'
+    EXECUTE @result = sp_OAMethod 
+      @textStreamToken,
+      'Write',
+      NULL,
+      @data
+  end
+
+  IF @result = 0
+  begin 
+    set @strErrorMessage = 'closing the file "' + @fullFilePath + '"'
+    EXECUTE @result = sp_OAMethod 
+      @textStreamToken,
+      'Close'
+  end
+
+  IF @result <> 0 
   BEGIN
-    DECLARE
-      @objFileSystem INT,
-      @objTextStream INT,
-      @objErrorObject INT,
-      @strErrorMessage VARCHAR(1000),
-      @command VARCHAR(1000),
-      @result INT
+		EXECUTE sp_OAGetErrorInfo 
+			@fileSystemToken,
+			@Source OUTPUT,
+			@MsgDescription OUTPUT
+        
+		set @strErrorMessage = 'Error ' + @strErrorMessage + IsNull(', Description:' + @MsgDescription, '')
 
-		
-    SELECT
-      @strErrorMessage = 'opening the File System Object'
-    EXECUTE @result = sp_OACreate 
-      'Scripting.FileSystemObject',
-      @objFileSystem OUT
-
-     
-    IF @result = 0 
-      SELECT
-        @objErrorObject = @objFileSystem,
-        @strErrorMessage = 'Creating file "' + @fullFilePath + '"'
-    IF @result = 0 
-      EXECUTE @result = sp_OAMethod 
-        @objFileSystem,
-        'CreateTextFile',
-        @objTextStream OUT,
-        @fullFilePath,
-        2,
-        True
-
-    IF @result = 0 
-      SELECT
-        @objErrorObject = @objTextStream,
-        @strErrorMessage = 'writing to the file "' + @fullFilePath + '"'
-    IF @result = 0 
-      EXECUTE @result = sp_OAMethod 
-        @objTextStream,
-        'Write',
-        NULL,
-        @data
-
-    IF @result = 0 
-      SELECT
-        @objErrorObject = @objTextStream,
-        @strErrorMessage = 'closing the file "' + @fullFilePath + '"'
-
-    IF @result = 0 
-      EXECUTE @result = sp_OAMethod 
-        @objTextStream,
-        'Close'
-
-    IF @result <> 0 
-      BEGIN
-        DECLARE
-          @Source VARCHAR(255),
-          @MsgDescription VARCHAR(255),
-          @Helpfile VARCHAR(255),
-          @HelpID INT
-	
-        EXECUTE sp_OAGetErrorInfo 
-          @objErrorObject,
-          @source OUTPUT,
-          @MsgDescription OUTPUT,
-          @Helpfile OUTPUT,
-          @HelpID OUTPUT
-        SELECT
-          @strErrorMessage = 'Error ' + COALESCE(@strErrorMessage, 'at unkown stage') + ', Description:' + COALESCE(@MsgDescription, '')
-
-      declare @fullError nvarchar(max) 
-			set @fullError = cast( @helpId  as nvarchar(max))+ '#' + @strErrorMessage
-			return @fullError;
-      END ;
-    
-    EXECUTE sp_OADestroy 
-      @objTextStream ;
-    EXECUTE sp_OADestroy 
-      @objFileSystem ;
-
-		return cast( @result as nvarchar(max))
-  END
-
-GO
+	END
+  else
+	BEGIN
+		set @strErrorMessage = null
+	END
+  
+  EXECUTE sp_OADestroy textStreamToken
+  EXECUTE sp_OADestroy @fileSystemToken
+  
+	return @strErrorMessage
+END
